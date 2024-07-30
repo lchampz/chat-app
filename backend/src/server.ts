@@ -2,10 +2,8 @@ import http from "http";
 import express, { Application } from "express";
 import { Server } from "socket.io";
 import path from "path";
-import { Auth } from "./Models/Auth";
 import { User } from "./Models/User";
-import jwt from "jsonwebtoken";
-import { IJwtPayload } from "./Types/IJwtPayload";
+import { Chat } from "./Models/Chat";
 class App {
   private PORT: number;
   private app: Application;
@@ -46,7 +44,7 @@ class App {
       console.log(req.body);
       const { avatar, password, name, email } = req.body;
 
-      const response = await new Auth().signUp({
+      const response = await new User().signUp({
         avatar,
         password,
         name,
@@ -58,11 +56,31 @@ class App {
     this.app.post("/signIn", async (req, res) => {
       const { email, password } = req.body;
 
-      const response = await new Auth().signIn({ email, password });
+      const response = await new User().signIn({ email, password });
 
       res.json(response);
     });
     this.app.get("/user", async (req, res) => {
+      const { authorization } = req.headers;
+
+      const clsUser = new User();
+
+      if (!authorization)
+        return res.status(401).json({ msg: "Não autorizado" });
+
+      const token = authorization.split(" ")[1];
+
+      const response = clsUser.parseTokenToId(token);
+      if(!response.status) return res.status(401).json({ message: response.message });
+
+      const user = await clsUser.getUserInfo(response.message!);
+        
+      if (!user) return res.status(401).json({ msg: "Não autorizado" });
+
+      return res.json(user);
+      
+    });
+    this.app.get("/chats", async (req, res) => {
       const { authorization } = req.headers;
 
       if (!authorization)
@@ -70,16 +88,38 @@ class App {
 
       const token = authorization.split(" ")[1];
 
-      const response = new Auth().parseTokenToId(token);
+      const response = new User().parseTokenToId(token);
       if(!response.status) return res.status(401).json({ message: response.message });
 
-      const user = await new User().getUserInfo(response.message!);
-        
-      if (!user) return res.status(401).json({ msg: "Não autorizado" });
+      const chats = await new Chat().getChats(response.message!);
 
-      return res.json(user);
-      
+      if(!chats || chats.length == 0) return res.status(401).json({ msg: "Nenhum chat encontrado." });
+
+      return res.json(chats);
     });
+    this.app.get("/chat/:chatId", async (req, res) => {
+      const chatId = req.params.chatId;
+      const clsChat = new Chat();
+      const { authorization } = req.headers;
+
+      if (!authorization)
+        return res.status(401).json({ msg: "Não autorizado" });
+
+      const token = authorization.split(" ")[1];
+
+      const response = new User().parseTokenToId(token);
+      if(!response.status) return res.status(401).json({ message: response.message });
+
+      const hasPermission = await clsChat.userHasPermission(response.message!, chatId);
+
+      if(!hasPermission) return res.status(401).json({ msg: "Não autorizado" });
+
+      const chats = await clsChat.getChatById(chatId);
+
+      if(!chats || chats.length == 0) return res.status(401).json({ msg: "Nenhuma mensagem encontrada." });
+
+      return res.json(chats);
+    })
   }
 }
 
