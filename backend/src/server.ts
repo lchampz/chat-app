@@ -120,6 +120,39 @@ class App {
 
       return res.json(chats);
     })
+    this.app.post("/chat/create", async (req, res) => {
+      const clsChat = new Chat();
+      const { authorization } = req.headers;
+      const { email } = req.body;
+
+      if (!authorization)
+        return res.status(401).json({ msg: "Não autorizado" });
+
+      const token = authorization.split(" ")[1];
+
+      const response = new User().parseTokenToId(token);
+      if(!response.status) return res.status(401).json({ message: response.message });
+
+      const creationStatus = await clsChat.createNewChat({sender: response.message!, receiver: email});
+
+      return res.json(creationStatus);
+    })
+    this.app.delete("/chat/delete/:chatId", async (req, res) => {
+      const { authorization } = req.headers;
+      const chatId = req.params.chatId;
+
+      if (!authorization)
+        return res.status(401).json({ msg: "Não autorizado" });
+
+      const token = authorization.split(" ")[1];
+
+      const response = new User().parseTokenToId(token);
+      if(!response.status) return res.status(401).json({ message: response.message });
+
+      const responseChat = await new Chat().deleteChat(chatId);
+      
+      return res.json(responseChat);
+    })
   }
 }
 
