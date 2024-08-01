@@ -65,26 +65,45 @@ export class Chat {
   async deleteChat(chatId: string): Promise<IResponse> {
     const responseMessages = await this.deleteAllMessages(chatId);
 
-    if(responseMessages.status) {
-      const chatDeleted = await prisma.chats.delete({where: {id: chatId}})
+    if (responseMessages.status) {
+      const chatDeleted = await prisma.chats.delete({ where: { id: chatId } });
 
-      if(chatDeleted) return {status: true, message: "Chat excluído com sucesso."};
+      if (chatDeleted)
+        return { status: true, message: "Chat excluído com sucesso." };
     }
 
-    return {status: false, message: responseMessages.message};
+    return { status: false, message: responseMessages.message };
   }
 
   async deleteAllMessages(chatId: string): Promise<IResponse> {
     const isChatExists = await prisma.chats.findFirst({
       where: {
-       id:chatId
+        id: chatId,
       },
     });
 
-    if(!isChatExists) return {status: false, message: "Chat não existe."}
+    if (!isChatExists) return { status: false, message: "Chat não existe." };
 
-    const { count } = await prisma.messages.deleteMany({where: {chat_id: chatId}});
+    const { count } = await prisma.messages.deleteMany({
+      where: { chat_id: chatId },
+    });
 
-    return {status: true, message: `Foram excluídas ${count} mensagens.`};
+    return { status: true, message: `Foram excluídas ${count} mensagens.` };
+  }
+
+  async saveMessage(message: ISaveMessage): Promise<IResponse> {
+    const responseMsg = await prisma.messages.create({
+      data: {
+        body: message.body,
+        attachment_code: message.attachment_code,
+        created_at: new Date().toISOString(),
+        chat_id: message.chat_id,
+        sender_id: message.sender_id,
+      },
+    });
+
+    if(responseMsg) return {status: true, message: "Mensagem registrada com sucesso."};
+
+    return {status: false, message: "Erro ao registrar mensagem."};
   }
 }

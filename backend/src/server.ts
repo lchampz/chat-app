@@ -153,6 +153,24 @@ class App {
       
       return res.json(responseChat);
     })
+    this.app.post("/message/save", async (req, res) => {
+      const { authorization } = req.headers;
+      let data = req.body as ISaveMessage
+
+      if (!authorization)
+        return res.status(401).json({ msg: "Não autorizado" });
+
+      const token = authorization.split(" ")[1];
+
+      const response = new User().parseTokenToId(token);
+      if(!response.status) return res.status(401).json({ message: response.message });
+
+      data.sender_id = response.message!;
+
+      const responseMsg = await new Chat().saveMessage(data);
+
+      return res.json(responseMsg);
+    })
   }
 }
 
