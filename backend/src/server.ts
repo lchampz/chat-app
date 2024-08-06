@@ -4,18 +4,22 @@ import { Server } from "socket.io";
 import path from "path";
 import { User } from "./Models/User";
 import { Chat } from "./Models/Chat";
+import { Socket } from "./Models/Socket";
 class App {
   private PORT: number;
   private app: Application;
   private http: http.Server;
   private io: Server;
+  private clsSocket: Socket;
+
   constructor() {
     this.app = express();
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.PORT = 3000;
     this.http = http.createServer(this.app);
-    this.io = new Server(this.http);
+    this.clsSocket = new Socket(this.http);
+    this.io = this.clsSocket.io; 
     this.listenSocket();
     this.setupRoutes();
   }
@@ -28,12 +32,15 @@ class App {
 
   listenSocket() {
     this.io.on("connection", (socket) => {
-      console.log("user connected: ", socket.id);
+      this.clsSocket.usersConnected.push(socket.id);
+
+      //n sei oq fazer agr, nunca mexi com socket XD
 
       socket.on("message", (msg) => {
         this.io.emit("message", { id: socket.id, msg: msg });
       });
     });
+    
   }
 
   setupRoutes() {

@@ -37,22 +37,10 @@
     const list = document.getElementById('msgs')
 
     btn.addEventListener("click", () => {
-        // if(input.value) {
-        //     socket.emit("message", input.value);
-        //     input.value = "";
-        // }
-        console.log("clique")
-
-    fetch("http://localhost:3000/signUp", {
-      method: "POST",
-      body: JSON.stringify({
-        avatar: "img.jpg",
-        name: "victor",
-        email: "victor@gmail.com",
-        password: "1234"
-      }),
-    });
-    
+        if(input.value) {
+            socket.emit("message", input.value);
+            input.value = "";
+        }
     })
 
     socket.on('message', (msg) => {
