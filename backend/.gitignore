@@ -2,6 +2,11 @@ node_modules
 # Keep environment variables out of version control
 .env
 
-backend/package-lock.json
-backend/prisma/migrations
+./backend/prisma/migrations
 
+package-lock.json
+
+
+*.db
+
+*.sql
