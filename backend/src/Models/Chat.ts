@@ -1,12 +1,32 @@
 import { Chats, Messages } from "@prisma/client";
 import { prisma } from "./Prisma";
 import { IResponse } from "../Types/IResponse";
+import { IChat, INewChat, ISaveMessage } from "../Types/IChats";
 
 export class Chat {
-  async getChats(id: string): Promise<Chats[] | null> {
-    return await prisma.chats.findMany({
+  async getChats(id: string): Promise<IChat | null> {
+    const chats = await prisma.chats.findMany({
+      include: {
+        messages: {
+          select: {
+            id: true,
+            body: true,
+            sender_id: true,
+            created_at: true,
+            viewed_at: true,
+          },
+        },
+      },
       where: { OR: [{ receiver_id: id }, { sender_id: id }] },
     });
+
+    const unseen_count = chats.reduce((count, chat) => {
+      return count + chat.messages.reduce((msgCount, msg) => {
+        return (id !== msg.sender_id && !msg.viewed_at) ? msgCount + 1 : msgCount;
+      }, 0);
+    }, 0);
+    
+    return { chats, unseen_count };
   }
 
   async getChatById(id: string): Promise<Messages[] | null> {
@@ -102,8 +122,9 @@ export class Chat {
       },
     });
 
-    if(responseMsg) return {status: true, message: "Mensagem registrada com sucesso."};
+    if (responseMsg)
+      return { status: true, message: "Mensagem registrada com sucesso." };
 
-    return {status: false, message: "Erro ao registrar mensagem."};
+    return { status: false, message: "Erro ao registrar mensagem." };
   }
 }

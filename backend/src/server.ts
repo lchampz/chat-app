@@ -5,6 +5,7 @@ import path from "path";
 import { User } from "./Models/User";
 import { Chat } from "./Models/Chat";
 import { Socket } from "./Models/Socket";
+import { ISaveMessage } from "./Types/IChats";
 class App {
   private PORT: number;
   private app: Application;
@@ -16,7 +17,7 @@ class App {
     this.app = express();
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    this.PORT = 3000;
+    this.PORT = 8000;
     this.http = http.createServer(this.app);
     this.clsSocket = new Socket(this.http);
     this.io = this.clsSocket.io; 
@@ -44,9 +45,6 @@ class App {
   }
 
   setupRoutes() {
-    this.app.get("/", (req, res) => {
-      res.sendFile(path.resolve(__dirname + "../../../frontend/index.html"));
-    });
     this.app.post("/signUp", async (req: any, res: any) => {
       console.log(req.body);
       const { avatar, password, name, email } = req.body;
@@ -100,7 +98,7 @@ class App {
 
       const chats = await new Chat().getChats(response.message!);
 
-      if(!chats || chats.length == 0) return res.status(401).json({ msg: "Nenhum chat encontrado." });
+      if(!chats?.chats || chats.chats.length == 0) return res.status(401).json({ msg: "Nenhum chat encontrado." });
 
       return res.json(chats);
     });
