@@ -9,3 +9,11 @@ export interface IChat {
     viewed_at?: string,
     created_at: string
 }
+
+export interface IUpdateChatEvent {
+    type: "create" | "delete",
+    query: {
+        chat_id?: number,
+        users: string[]
+    }
+}

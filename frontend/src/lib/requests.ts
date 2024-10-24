@@ -3,6 +3,7 @@ import { SignInData, SignUpData } from "@/lib/schemas/authSchema";
 import { IResponse } from "@/types/IApi";
 import { api } from "./api";
 import { ISaveMessage } from "@/types/IMessage";
+import { IChat } from "@/types/IChat";
 
 export const signIn = async (data: SignInData) => {
   return await api<IResponse>({
@@ -22,7 +23,7 @@ export const signUp = async (data: SignUpData) => {
   });
 };
 
-export const getChats = async () => await api<IResponse>({ endpoint: "chats" });
+export const getChats = async () => await api<IResponse & {chats: IChat[]}>({ endpoint: "chats" });
 export const createChat = async (data: NewChatData) => await api<IResponse>({ endpoint: "chat/create", method: "POST", data });
 export const deleteChat = async (chatId: string) => await api<IResponse>({endpoint: `chat/delete/${chatId}`, method: "DELETE"});
 export const getChatMessage = async (chatId: string) => await api<IResponse>({endpoint: `chat/${chatId}`});

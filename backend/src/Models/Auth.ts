@@ -1,4 +1,4 @@
-import { IResponse } from './../Types/IResponse';
+import { IResponse } from '../Types/IResponse';
 import { prisma } from "./Prisma";
 import { IUser, ISignIn } from "../Types/IUser";
 import bcrypt from "bcrypt";
